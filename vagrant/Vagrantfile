@@ -1,0 +1,10 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/bionic64"
+  config.vm.network "forwarded_port", guest: 80, host: 8080
+config.vm.network "forwarded_port", guest: 9000, host: 5555
+  config.vm.synced_folder ".", "/vagrant"
+  config.vm.provider "virtualbox" do |vb|
+     vb.memory = "4096"
+     vb.cpus = "2"
+  end
+end
