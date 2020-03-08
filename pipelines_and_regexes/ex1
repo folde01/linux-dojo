@@ -1,0 +1,22 @@
+###########
+Exercise 1:
+###########
+Our manager provided us with a file containing a list of Ubuntu Desktop packages.
+
+We will need to extrapolate the names of the first 10 packages whose name start with 'lib':
+    - each name should be on a new line
+    - each name should *not* contain information about the package's version or the CPU reference.
+
+Can this be done in one single command?
+
+################
+Extra challenge:
+################ 
+For each of the 10 selected package, we should search a brief description contained in the apt-cache. 
+$apt-cache search [package's name]
+
+We should then print the resulting output in the following format:
+
+package name: package description 
+
+This output should be saved to a file called "lib_packages_descriptions.txt"

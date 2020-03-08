@@ -12,6 +12,16 @@
     - browsing the Internet
     - testing RESTful API
 
+- Linux pipelines and functional programming
 
+Example 1:
+Our manager asked us to make a short report of all the commits that were done for the code-dojo repository (https://github.com/folde01/linux-dojo).
+He/she tells us that the report must follow some specific format requirements:
+- it should contain only the commit hash codes;
+- it should contain only the first 6 digits;
+- all of them must be all-caps;
+
+He/she also tells us that we need to make a command that sends us back to the first commit in the repository.
+How can we do this with a one-liner?
 
     
