@@ -36,3 +36,26 @@ Our manager tells us that the report must follow some specific format requiremen
 We are also told that we need to create a command that sends us back to the first commit in the repository.
 How can we do this with a one-liner?
 #######################################################    
+
+
+===============================================================================
+
+curl and REST API testing
+
+- curl is a very powerful tool that allow to make requests using different protocols (e.g. FTP, HTTP...) and methods (GET, POST, PATCH)
+- it is invaluable when testing RESTful APIs
+
+#######################################################
+Example 2:
+#######################################################
+We need to test an endpoint of our new REST API, and we want to ensure that the
+requests using the GET method return meaningful results.
+
+We need to check that the following endpoint:
+https://jsonplaceholder.typicode.com/todos/
+returns the correct information for items.
+For example, to get information about item with ID one, we would make a get call to:
+https://jsonplaceholder.typicode.com/todos/1
+
+How can we make get the response codes for items *with IDs from 35 to 47 only*?
+

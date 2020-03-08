@@ -1,0 +1,14 @@
+##########
+Exercise 2
+##########
+
+
+Using the same endpoint shown in the example, get the values associated with the 'title' key of each item with ID between 35 and 45, and save it to a new file.
+
+https://jsonplaceholder.typicode.com/todos/1
+
+###############
+Extra Challenge
+###############
+
+How can we make POST or PUT requests to the same endpoint?
