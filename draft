@@ -1,0 +1,16 @@
+- introduction
+
+- Linux philosophy: many  little, robust programs that do one thing very well
+
+- TIMTOWTDI (Tim Toady) - originally from the Perl community, but applies well to general Linux scripting I think
+
+- In contrast with Python's Zen: ""There should be one — and preferably only one — obvious way to do it." 
+
+- more things than you may think can be done efficiently (and for free) from the commandline:
+    - PDF editing;
+    - image editing
+    - testing RESTful API
+
+
+
+    
