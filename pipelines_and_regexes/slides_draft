@@ -11,7 +11,7 @@
 
 - TIMTOWTDI (Tim Toady) - originally from the Perl community, but applies well to general Linux scripting in my opinion
 
-- In contrast with Python's Zen: ""There should be one — and preferably only one — obvious way to do it." 
+- In contrast with Python's Zen: "There should be one — and preferably only one — obvious way to do it." 
 
 
 - Linux pipelines and functional programming
@@ -26,13 +26,13 @@ $echo (to pass strings)
 
 #######################################################
 Example 1:
+#######################################################
 Our manager asked us to make a short report of all the commits that were done for the code-dojo repository (https://github.com/folde01/linux-dojo).
 Our manager tells us that the report must follow some specific format requirements:
-- it should contain only the commit hash codes;
-- it should contain only the first 6 digits;
-- all of them must be all-caps;
+- it should contain only the commits' hash codes;
+- each hash code should contain only the first 6 characters;
+- the output should be all-caps;
 
 We are also told that we need to create a command that sends us back to the first commit in the repository.
 How can we do this with a one-liner?
-#######################################################
-    
+#######################################################    
