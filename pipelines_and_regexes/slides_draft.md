@@ -18,11 +18,11 @@
 <br>
     * browsing the Internet (e.g. [lynx](https://lynx.browser.org/))
 <br>
-    * Word processing (e.g. vim + Latex)
+    * Word processing (e.g. [vim](https://www.vim.org/) + [LaTEX](https://www.latex-project.org/))
 <br>
-    * testing RESTful API (e.g. curl)
+    * testing RESTful API (e.g. [curl](https://curl.haxx.se/))
 <br>
-    * *writing presentations!* :-)
+    * *writing presentations!* :-) ([mdp](https://github.com/visit1985/mdp))
 
 -----------------------------------------
 
@@ -89,7 +89,7 @@ We are also told that we need to create a command that sends us back to the firs
 
 -> # Example 2: <-
 
-We need to test an endpoint of our new REST API, and we want to ensure that the
+We need to test an endpoint of [a new REST API](https://jsonplaceholder.typicode.com/) that we are evaluating, and we want to ensure that the
 requests using the GET method return meaningful results.
 
 We need to check that the following endpoint:
