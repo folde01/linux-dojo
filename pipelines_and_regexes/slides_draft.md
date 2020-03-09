@@ -62,6 +62,13 @@ series of functions, which take a string-argument and return a string value
     
     $ $(String generator => S | S => S | S => S >> file.txt)
 
+<br>
+*Some important caveats:*
+
+- no guarantee of referential transparency;
+
+- the values are not really immutable!
+
 ----------------------------------------------------------
 
 -> # Linux pipelines and functional programming <-
