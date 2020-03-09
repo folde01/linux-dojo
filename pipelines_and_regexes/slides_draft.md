@@ -54,6 +54,7 @@ Linux pipelines and functional programming languages' pipelines are very similar
 We start from an 'immutable' value (usually a string) and we pass it through a 
 series of functions, which take a string-argument and return a string value 
 (in most cases). 
+<br>
 
     $ String generator => S | S => S | S => S 
     
