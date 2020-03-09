@@ -14,15 +14,20 @@
 
     * PDF editing (e.g. [pdftk](https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/));
 <br>
+
     * image editing (e.g. [imagemagick](https://imagemagick.org/index.php))
 <br>
+
     * browsing the Internet (e.g. [lynx](https://lynx.browser.org/))
 <br>
+
     * Word processing (e.g. [vim](https://www.vim.org/) + [LaTEX](https://www.latex-project.org/))
 <br>
+
     * testing RESTful API (e.g. [curl](https://curl.haxx.se/))
 <br>
-    * *writing presentations!* :-) ([mdp](https://github.com/visit1985/mdp))
+
+    * *writing presentations!* :-) (e.g. [mdp](https://github.com/visit1985/mdp))
 
 -----------------------------------------
 
@@ -58,9 +63,11 @@ Some typical string generators:
 
 * $cat (to read from files)
 <br>
+
 * $echo (to pass strings)
 <br>
-... but really, the sky is the limit!
+
+*... but really, the sky is the limit!*
 
 -------------------------------------------------------
 
