@@ -1,0 +1,65 @@
+Goal is to have a program that finds all files recursively in the current directory that contain all the strings listed as arguments.
+
+eg
+
+grepz string1 string2 string3
+
+outputs filenames of each file containing all 3 strings.
+
+start with 1, then 2, then n
+
+1) aws_iam_role_policy 
+
+grep -R aws_iam_role_policy . 
+grep -l -R aws_iam_role_policy .
+grep -l -R aws_iam_role_policy . | wc -l
+
+2) aws_iam_role_policy and policy
+
+grep -R aws_iam_role_policy . 
+grep -l -R aws_iam_role_policy . 
+grep -l -R aws_iam_role_policy . | while read filename; do echo $filename; done
+grep -l -R aws_iam_role_policy . | while read filename; do echo $filename; grep -w policy $filename; echo; done
+# show with and without -w in second grep
+# now add -w to first grep to get rid of aws_iam_role_policy_attachment
+grep -w -l -R aws_iam_role_policy . | while read filename; do echo $filename; grep -w policy $filename; echo; done
+grep -w -l -R aws_iam_role_policy . | while read filename; do grep -l -w policy $filename; done
+grep -w -l -R aws_iam_role_policy . | while read filename; do grep -l -w policy $filename; done | wc -l
+
+n)
+
+# one way: loop over each arg, creating a growing list of files to return at the end..
+
+fs=$(grep -l -R -w string1 .)
+
+for s in string2 string3
+do
+  fs=$(echo "$fs" | \
+    while read filename; do 
+      grep -w -l "$s" $filename; 
+    done)
+done
+  
+$ echo "$fs"
+./c.txt
+
+
+
+
+# potentially better way as it doesn't store the output of grep in variables but rather just keeps piping: use a loop to generate a pipeline command string and then run the pipeline string using eval... pseudocode:
+
+cmd="grep -R aws_iam_role_policy ."
+
+for arg in arg2 to argN:
+  cmd += "| while read filename; do grep -l -w arg $filename"
+
+cmd += "; done"
+eval cmd
+
+potential features to add:
+* if it first checked to see that if any search string was a substring of another search string, then do -w for both, otherwise don't.
+* combination of regexes/globs/strings rather than just string
+* and, or
+* exclude e.g. .git
+
+... debugging? hard on cmd line, easier in a script.
