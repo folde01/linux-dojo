@@ -1,17 +1,25 @@
 #!/bin/bash
 
+args=$@
+
 string1=$1
 shift
 
 fs=$(grep -l -R -w $string1 .)
 
-for s in "$@" 
-do
+for s in "$@"; do
   fs=$(echo "$fs" | \
     while read filename; do
       grep -w -l "$s" $filename;
     done)
-  echo
 done
 
-echo "$fs"
+#echo "$fs" # do this with -l
+
+for f in $(echo "$fs"); do
+  echo "${f}:"
+  for a in $(echo "$args"); do
+    grep -n --colour "$a" "$f"
+  done
+  echo
+done
