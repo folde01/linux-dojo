@@ -1,7 +1,7 @@
 ###########
 Exercise 1:
 ###########
-Our manager provided us with a text file (linux_desktop_packages) containing a list of Ubuntu Desktop packages.
+Our manager provided us with a text file (./linux_desktop_packages) containing a list of Ubuntu Desktop packages.
 
 We will need to extrapolate the names of the first 10 packages whose name start with 'lib'. Additionally:
     - each name should be on a new line
