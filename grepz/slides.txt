@@ -1,0 +1,111 @@
+Example: building grepz, a handy search tool
+
+This example will show a way to build grepz, a shell script I wrote recently for helping me when writing Terraform code. grepz takes an arbitrary number of arguments as strings, and looks recursively under the current directory for files that contain all those strings.
+
+For each such file it finds, grepz will show an entry containing the filename, followed by all the matching lines with their respective line numbers.
+
+Let's try to do it in a semi-test driven development way.  First let's make a few text files to work with.
+
+$ mkdir testfiles
+$ cd testfiles
+
+$ echo UK > countries.txt
+$ echo USA >> countries.txt
+$ echo France >> countries.txt
+
+$ cat countries.txt
+UK
+USA
+France
+
+$ cat << EOF > cities.txt
+London
+New York
+Cardiff
+York
+Paris
+EOF
+
+This is called a 'heredoc' - https://www.gnu.org/software/bash/manual/html_node/Redirections.html is all about this and other very useful forms of 'redirection' of input and output in bash, like > and >> above. 
+ 
+$ cat cities.txt 
+London
+New York
+Cardiff
+York
+Paris
+
+$ cat << EOF > capitals.txt
+London, UK
+Washington DC, USA
+Paris, France
+EOF
+
+$ cat capitals.txt
+London, UK
+Washington DC, USA
+Paris, France
+
+Here's how we want grepz to behave:
+
+$ grepz UK
+
+## ./countries.txt 
+1:UK
+
+## ./capitals.txt 
+1:London, UK
+
+$ grepz UK USA France
+
+## ./countries.txt 
+- UK -
+1:UK
+- USA -
+2:USA
+- France -
+3:France
+
+## ./capitals.txt 
+- UK -
+1:London, UK
+- USA -
+2:Washington DC, USA
+- France -
+3:Paris, France
+
+
+$ grepz York
+
+## ./cities.txt 
+2:New York
+4:York
+
+$ grepz "New York"
+
+## ./cities.txt 
+2:New York
+
+$ grepz York "New York"
+
+## ./cities.txt 
+- York -
+2:New York
+4:York
+- New York -
+2:New York
+
+$ grepz New York
+
+## ./cities.txt 
+- New -
+2:New York
+- York -
+2:New York
+4:York
+
+So how to make it do that? Let's do it in steps.
+
+Step 1: search for one argument.
+
+
