@@ -34,23 +34,25 @@ the command line:
 
 -> # The 'Unix Philosophy' <-
 
-This is made possible by the *"Unix philosophy"*, initially defined by 
-[Ken Thompson](https://en.wikipedia.org/wiki/Ken_Thompson): many  little, robust programs that do one thing well.
-<br>
-From [The Art of Unix Programming](http://www.catb.org/~esr/writings/taoup/html/ch01s06.html):
-
-* Make each program do one thing well. To do a new job, build afresh rather than complicate old programs by adding new "features".
-
-* Expect the output of every program to become the input to another, as yet unknown, program. Don't clutter output with extraneous information. Avoid stringently columnar or binary input formats. Don't insist on interactive input.
-
-* Design and build software, even operating systems, to be tried early, ideally within weeks. Don't hesitate to throw away the clumsy parts and rebuild them.
-
-* Use tools in preference to unskilled help to lighten a programming task, even if you have to detour to build the tools and expect to throw some of them out after you've finished using them.
+This is made possible by the *"Unix philosophy"*, initially defined by [Ken Thompson](https://en.wikipedia.org/wiki/Ken_Thompson): many  little, robust programs that do one thing well.
 <br>
 
-**There is more than one way to do it ** TIMTOWTDI (Tim Toady)**
-originally from the Perl community, but applies 
-well to general Linux scripting in my opinion
+-> Excerpt from [The Art of Unix Programming](http://www.catb.org/~esr/writings/taoup/html/ch01s06.html): <-
+
+* **Make each program do one thing well.** To do a new job, build afresh rather than complicate old programs by adding new "features".
+
+* **Expect the output of every program to become the input to another, as yet unknown, program.** Don't clutter output with extraneous information. Avoid stringently columnar or binary input formats. Don't insist on interactive input.
+
+
+----------------------------------------------------
+
+-> # More philosophy <-
+
+
+-> **There is more than one way to do it ** TIMTOWTDI (Tim Toady)** <-
+
+
+Originally originated from the Perl community, but it applies well to general Linux scripting in my opinion.
 
 <br>
 
