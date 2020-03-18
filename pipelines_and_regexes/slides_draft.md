@@ -69,11 +69,11 @@ series of functions, which take a string-argument and return a string value
 (in most cases). 
 <br>
 
-    $ String generator => S | S => S | S => S 
+    $ Data source => S | S => S | S => S 
     
-    $ String generator => S | S => S | S => S >> file.txt
+    $ Data source => S | S => S | S => S >> file.txt
     
-    $ $(String generator => S | S => S | S => S >> file.txt)
+    $ $(Data source => S | S => S | S => S >> file.txt)
 
 <br>
 *Some important caveats:*
@@ -113,11 +113,17 @@ the first commit in the repository.
 
 *How can we do this with a one-liner?*
 
+**EXPECTED OUTPUT EXAMPLE:**
+
+adas90
+34KSDL
+DSSA87
+
 ---------------------------------------------------------
 
 -> # curl and REST API testing <-
 
-* [curl](https://curl.haxx.se/) is a very powerful tool that allow to make 
+* [curl](https://curl.haxx.se/) is a very powerful tool that allows to make 
 requests using different protocols (e.g. FTP, HTTP...) and methods (GET, POST, PATCH)
 
 * it is invaluable when testing RESTful APIs!
@@ -135,7 +141,7 @@ We need to check that the following endpoint:
 
 returns the correct information for items.
 
-For example, to get information about item with ID one, we would make a get call to:
+For example, to get information about the item with ID one, we would make a get call to:
 **https://jsonplaceholder.typicode.com/todos/1**
 
 How can we make get the response codes for items *with IDs from 35 to 47 only*?
