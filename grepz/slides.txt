@@ -35,38 +35,52 @@ Cardiff
 York
 Paris
 
-$ cat << EOF > capitals.txt
+$ mkdir country-info
+
+$ cat << EOF > country-info/capitals.txt
 London, UK
 Washington DC, USA
 Paris, France
 EOF
 
-$ cat capitals.txt
+$ cat country-info/capitals.txt
 London, UK
 Washington DC, USA
 Paris, France
 
-Here's how we want grepz to behave:
+Let's make a few test cases showing how we want grepz to behave:
+
+Case 1 - one string
 
 $ grepz UK
 
-## ./countries.txt 
-1:UK
-
-## ./capitals.txt 
+## ./country-info/capitals.txt
 1:London, UK
 
-$ grepz UK USA France
+## ./countries.txt
+1:UK
 
-## ./countries.txt 
+Case 2 - two strings
+
+$ grepz UK USA
+
+## ./country-info/capitals.txt
+- UK -
+1:London, UK
+- USA -
+2:Washington DC, USA
+
+## ./countries.txt
 - UK -
 1:UK
 - USA -
 2:USA
-- France -
-3:France
 
-## ./capitals.txt 
+Case 3 - three strings
+
+$ grepz UK USA France
+
+## ./country-info/capitals.txt
 - UK -
 1:London, UK
 - USA -
@@ -74,6 +88,15 @@ $ grepz UK USA France
 - France -
 3:Paris, France
 
+## ./countries.txt
+- UK -
+1:UK
+- USA -
+2:USA
+- France -
+3:France
+
+Case 4 
 
 $ grepz York
 
@@ -81,10 +104,14 @@ $ grepz York
 2:New York
 4:York
 
+Case 5
+
 $ grepz "New York"
 
 ## ./cities.txt 
 2:New York
+
+Case 6
 
 $ grepz York "New York"
 
@@ -95,6 +122,14 @@ $ grepz York "New York"
 - New York -
 2:New York
 
+Case 7
+
+$ grepz Yor
+
+[no results]
+
+Case 8
+
 $ grepz New York
 
 ## ./cities.txt 
@@ -104,8 +139,252 @@ $ grepz New York
 2:New York
 4:York
 
+
 So how to make it do that? Let's do it in steps.
 
-Step 1: search for one argument.
+Step 1: search for one string 
+
+We'll use "UK" as our search string, as in Case 1.
+
+$ grep UK countries.txt 
+UK
+
+$ grep UK *
+countries.txt:UK
+grep: country-info: Is a directory
+
+The * just expands to what's in the current directory. It's not recursive, but grep -R is.
+
+$ grep -R UK
+country-info/capitals.txt:London, UK
+countries.txt:UK
+
+$ grep -R -n UK
+country-info/capitals.txt:1:London, UK
+countries.txt:1:UK
+
+That gives us all the info we need, minus the formatting, but let's worry about that later.
+
+Step 2: search for two strings, as in Case 2.
+
+This is what we want:
+
+$ grepz UK USA
+
+## ./country-info/capitals.txt
+- UK -
+1:London, UK
+- USA -
+2:Washington DC, USA
+
+## ./countries.txt
+- UK -
+1:UK
+- USA -
+2:USA
+
+
+We can get part way there by getting a list of the files that contain UK and then searching each one for USA.
+
+$ grep -R UK
+country-info/capitals.txt:London, UK
+countries.txt:UK
+
+$ grep -R -l UK
+country-info/capitals.txt
+countries.txt
+
+$ grep -R -l UK | while read filename; do echo hello; done
+hello
+hello
+
+Here we use 'read', which is taking a line of text from the pipe and putting it in the variable $filename. 'while' loops over the values of $filename until the pipe runs dry.
+
+$ grep -R -l UK | while read filename; do echo $filename; done
+country-info/capitals.txt
+countries.txt
+
+$ grep -R -l UK | while read filename; do grep USA $filename; done
+Washington DC, USA
+USA
+
+$ grep -R -l UK | while read filename; do grep -l USA $filename; done
+country-info/capitals.txt
+countries.txt
+
+
+But let's say we want to make sure we don't match on 'US', only 'USA'. And not 'K', but 'UK'.
+
+
+$ grep -R -l UK | while read filename; do grep -l US $filename; done
+country-info/capitals.txt
+countries.txt
+
+$ grep -R -l UK | while read filename; do grep -l -w US $filename; done
+
+$ grep -R -l UK | while read filename; do grep -l -w USA $filename; done
+country-info/capitals.txt
+countries.txt
+
+$ grep -w -R -l UK | while read filename; do grep -l -w USA $filename; done
+country-info/capitals.txt
+countries.txt
+
+$ grep -w -R -l K | while read filename; do grep -l -w USA $filename; done
+$ 
+
+
+Ok, great, we now have a list of files that have contain both UK and USA.
+
+
+Step 3: Search for three strings
+
+Recall what we need: 
+
+Case 3 - three strings
+
+$ grepz UK USA France
+
+## ./country-info/capitals.txt
+- UK -
+1:London, UK
+- USA -
+2:Washington DC, USA
+- France -
+3:Paris, France
+
+## ./countries.txt
+- UK -
+1:UK
+- USA -
+2:USA
+- France -
+3:France
+
+
+Let's aim first for the list of files we need. We could just add another pipe on the end like this:
+
+$ grep -w -R -l UK | while read filename; do grep -w -l USA $filename | while read filename2; do grep -w -l France $filename2; done; done
+
+Making that easier to read:
+
+$ grep -w -R -l UK | while read filename; do
+>   grep -w -l USA $filename | while read filename2; do
+>     grep -w -l France $filename2;
+>   done
+> done
+country-info/capitals.txt
+countries.txt
+
+Recall from above that the output of the second grep (for USA) is a list of filenames containing both UK and USA. We're piping that to another 'while read variable' as above. That works fine for three, but what about ten? And arbitrary strings as opposed to hard-coded ones?
+
+
+Step 4: Search for n strings 
+
+Again, recall Case 3:
+
+$ grepz UK USA France
+
+## ./country-info/capitals.txt
+- UK -
+1:London, UK
+- USA -
+2:Washington DC, USA
+- France -
+3:Paris, France
+
+## ./countries.txt
+- UK -
+1:UK
+- USA -
+2:USA
+- France -
+3:France
+
+Let's put our strings in an array, as we can make our array arbitrarily long.
+
+$ strings=("UK" "USA" "France")
+
+Now let's get the files matching the first element.
+
+$ first_string="${strings[0]}"
+$ echo $first_string 
+UK
+
+$ files=$(grep -l -R -w "$first_string")
+
+$ echo "$files"
+./country-info/capitals.txt
+./countries.txt
+
+If we then loop over the rest of the strings, searching for each one in our remaining list of files, we can change $files to reflect the change as we go. 
+
+$ rest_of_strings="${strings[@]:1}"
+$ echo "$rest_of_strings"
+USA France
+
+More on array slicing: https://stackoverflow.com/questions/1335815/how-to-slice-an-array-in-bash 
+
+Now build the loop:
+
+$ for string in "$rest_of_strings"
+> do
+>   echo "$string"
+> done
+USA France
+
+That's not what we wanted. Bash is seeing "$rest_of_strings" as one word. echoing it first splits it up before 'for' starts using it.
+
+$ for string in `echo "$rest_of_strings"`
+> do
+>   echo "$string"
+> done
+USA
+France
+
+Now make the loop change the value of files.
+
+$ for string in `echo "$rest_of_strings"`
+> do
+>   files=$(echo "$files" | while read filename
+>     do
+>       grep -w -l "$string" $filename
+>     done)
+> done
+
+And a sanity check shows we still have the list of files we want:
+
+$ echo "$files"
+country-info/capitals.txt
+countries.txt
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
