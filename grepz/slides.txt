@@ -1,0 +1,675 @@
+## Jesse's Linux dojo example:
+## building grepz, a multi-string search tool
+
+
+##########################
+##  Part 1: Introduction  
+##########################
+
+This example will show a way to build grepz, a shell script I wrote recently for helping me when writing Terraform code. grepz takes an arbitrary number of arguments as strings, and looks recursively under the current directory for files that contain all those strings.
+
+For each such file it finds, it will show the filename, followed by all the matching lines with their respective line numbers.
+
+
+# How we'll approach this
+
+Let's try to do this in a semi-test driven development way. First we'll make a few text files to work with and a few test cases which use them. I'll be working from a folder called grepz in the dojo repo - https://github.com/folde01/linux-dojo - which has this file in it.
+
+
+#######################################
+##  Part 2: Test files and test cases
+#######################################
+
+
+# Making the test files
+
+$ cd grepz
+
+$ mkdir testfiles
+$ cd testfiles
+
+$ echo UK > countries.txt
+$ echo USA >> countries.txt
+$ echo France >> countries.txt
+
+$ cat countries.txt
+UK
+USA
+France
+
+$ cat << EOF > cities.txt
+London
+New York
+Cardiff
+York
+Paris
+EOF
+
+The command above is called a 'heredoc' - https://www.gnu.org/software/bash/manual/html_node/Redirections.html is all about this and other very useful forms of 'redirection' of input and output in bash, like > and >> above. 
+ 
+$ cat cities.txt 
+London
+New York
+Cardiff
+York
+Paris
+
+To make sure we're looking for files recursively, let's make a sub-folder with a file in it.
+
+$ mkdir country-info
+
+$ cat << EOF > country-info/capitals.txt
+London, UK
+Washington DC, USA
+Paris, France
+EOF
+
+$ cat country-info/capitals.txt
+London, UK
+Washington DC, USA
+Paris, France
+
+Here's what we should now have under testfiles:
+
+$ ls -lR
+.:
+total 12
+-rw-r--r-- 1 jesse jesse   35 Mar 18 09:32 cities.txt
+-rw-r--r-- 1 jesse jesse   14 Mar 18 09:32 countries.txt
+drwxr-xr-x 2 jesse jesse 4096 Mar 18 09:32 country-info
+
+./country-info:
+total 4
+-rw-r--r-- 1 jesse jesse 44 Mar 18 09:32 capitals.txt
+
+
+--------------
+
+
+
+# Making up some test cases
+
+Let's make a few test cases showing how we want grepz to behave:
+
+Case 1 - search for one string:
+
+$ grepz UK
+
+## ./country-info/capitals.txt
+1:London, UK
+
+## ./countries.txt
+1:UK
+
+
+Case 2 - search for two strings:
+
+$ grepz UK USA
+
+## ./country-info/capitals.txt
+- UK -
+1:London, UK
+- USA -
+2:Washington DC, USA
+
+## ./countries.txt
+- UK -
+1:UK
+- USA -
+2:USA
+
+
+Case 3 - search for three strings:
+
+$ grepz UK USA France
+
+## ./country-info/capitals.txt
+- UK -
+1:London, UK
+- USA -
+2:Washington DC, USA
+- France -
+3:Paris, France
+
+## ./countries.txt
+- UK -
+1:UK
+- USA -
+2:USA
+- France -
+3:France
+
+
+--------------
+
+
+# Making a test script
+
+Now let's put that all in a test.sh file, so we can use it as we go.
+
+The first thing we'll do in test.sh is see if the testfiles folder already exists and remove it if it does. Note: instead of an if statement, we could just 'rm -rf', but that does a forceful recursive remove, which is best avoided.
+
+#!/bin/bash 
+testfiles_dir="testfiles"
+
+if [ -d "$testfiles_dir" ]; then 
+  rm -r "$testfiles_dir"
+fi
+
+mkdir "$testfiles_dir"
+
+cd "$testfiles_dir"
+
+
+You'll note there a lot of quotes. Quoting is a big topic in Bash, so an illustrative example:
+
+$ mkdir foo
+$ cd foo
+$ testfiles_dir="testfiles dir"
+$ mkdir $testfiles_dir
+
+$ ls
+dir  testfiles
+
+We didn't want two folders, but rather one with a space in the name. Let's fix that with quotes in the mkdir command.
+
+$ rmdir dir testfiles
+
+$ mkdir "$testfiles_dir"
+
+$ ls
+'testfiles dir'
+
+
+Below is what test.sh might look like at this point. A quick word about comments: there are three comments in test.sh. The first is a special comment telling Linux to run this file using the /bin/bash interpreter. The second is a normal single-line comment, the only kind Bash supports. The last one is a hack to make multiline comments. We use a heredoc, as above, but this time the input isn't redirected to a command, so nothing happens, which is what we want.
+
+$ cat test.sh
+
+#!/bin/bash
+
+# Description: my amazing test script for grepz!
+
+# 1) Make a fresh test file folder
+
+testfiles_dir="testfiles"
+
+if [ -d "$testfiles_dir" ]; then
+  rm -r "$testfiles_dir" 
+fi
+
+mkdir "$testfiles_dir"
+cd "$testfiles_dir"
+
+
+# 2) Make our test files
+
+echo UK > countries.txt
+echo USA >> countries.txt
+echo France >> countries.txt
+
+cat << EOF > cities.txt
+London
+New York
+Cardiff
+York
+Paris
+EOF
+
+mkdir country-info
+
+cat << EOF > country-info/capitals.txt
+London, UK
+Washington DC, USA
+Paris, France
+EOF
+
+
+# 3) Write our test cases
+
+<< COMMENT
+$ grepz UK USA
+
+## ./country-info/capitals.txt
+- UK -
+1:London, UK
+- USA -
+2:Washington DC, USA
+
+## ./countries.txt
+- UK -
+1:UK
+- USA -
+2:USA
+
+Case 3 - search for three strings
+
+$ grepz UK USA France
+
+## ./country-info/capitals.txt
+- UK -
+1:London, UK
+- USA -
+2:Washington DC, USA
+- France -
+3:Paris, France
+
+## ./countries.txt
+- UK -
+1:UK
+- USA -
+2:USA
+- France -
+3:France
+COMMENT
+
+
+--------------
+
+
+# Running our test script
+
+
+$ ./test.sh
+bash: ./test.sh: Permission denied
+$ ls -l test.sh
+-rw-r--r-- 1 jesse jesse 933 Mar 18 12:18 test.sh
+$ chmod +x test.sh
+$ ls -l test.sh
+-rwxr-xr-x 1 jesse jesse 933 Mar 18 12:18 test.sh
+$ ./test.sh
+$ ls -lR
+.:
+total 24
+-rw-r--r-- 1 jesse jesse 12446 Mar 18 12:17 slides.txt
+drwxr-xr-x 3 jesse jesse  4096 Mar 18 12:19 testfiles
+-rwxr-xr-x 1 jesse jesse   933 Mar 18 12:18 test.sh
+
+./testfiles:
+total 12
+-rw-r--r-- 1 jesse jesse   35 Mar 18 12:19 cities.txt
+-rw-r--r-- 1 jesse jesse   14 Mar 18 12:19 countries.txt
+drwxr-xr-x 2 jesse jesse 4096 Mar 18 12:19 country-info
+
+./testfiles/country-info:
+total 4
+-rw-r--r-- 1 jesse jesse 44 Mar 18 12:19 capitals.txt
+
+
+
+##########################
+## Part 3: Writing grepz
+##########################
+
+Now onto writing grepz. How to make it pass all our tests? 
+
+Let's do it in steps.
+
+
+
+# Step 1: search for one string 
+
+We'll use "UK" as our search string, as in Case 1.
+
+$ grep UK countries.txt 
+UK
+
+$ grep UK *
+countries.txt:UK
+grep: country-info: Is a directory
+
+
+Oops! The * just turns into ('expands' in Bash lingo) what's in the current directory. It's not recursive, but grep -R is.
+
+
+$ grep -R UK
+country-info/capitals.txt:London, UK
+countries.txt:UK
+
+$ grep -R -n UK
+country-info/capitals.txt:1:London, UK
+countries.txt:1:UK
+
+That gives us all the info we need, minus the formatting but let's worry about that later. For now we'll focus on just identifying the files we care about.
+
+
+----------------
+
+
+Step 2: search for two strings, as in Case 2.
+
+Recall, this is what we ultimately want:
+
+$ grepz UK USA
+
+## ./country-info/capitals.txt
+- UK -
+1:London, UK
+- USA -
+2:Washington DC, USA
+
+## ./countries.txt
+- UK -
+1:UK
+- USA -
+2:USA
+
+
+We can get part way there by getting a list of the files that contain UK and then searching each one for USA.
+
+$ grep -R UK
+country-info/capitals.txt:London, UK
+countries.txt:UK
+
+$ grep -R -l UK
+country-info/capitals.txt
+countries.txt
+
+Now we loop over the files:
+
+$ grep -R -l UK | while read filename; do echo $filename; done
+country-info/capitals.txt
+countries.txt
+
+We used 'read', which is taking a line of text from the pipe and putting it in the variable $filename. 'while' loops over the values of $filename until the pipe is finished.
+
+$ grep -R -l UK | while read filename; do grep USA $filename; done
+Washington DC, USA
+USA
+
+
+$ grep -R -l UK | while read filename; do grep -l USA $filename; done
+country-info/capitals.txt
+countries.txt
+
+
+This is a good time to add a new requirement. Say we need countries.txt to contain both US and USA. Currently a search for US gives us USA, but we don't want that.
+
+echo US >> countries.txt
+
+$ grep -R -l UK | while read filename; do grep US $filename; done
+Washington DC, USA
+USA
+US
+
+We can use 'grep -w' for observing word boundaries.
+
+$ grep -w -R -l UK | while read filename; do grep -w US $filename; done
+US
+
+$ grep -w -R -l UK | while read filename; do grep -w -l US $filename; done
+countries.txt
+
+$ grep -w -R -l UK | while read filename; do grep -w -l USA $filename; done
+country-info/capitals.txt
+countries.txt
+
+Ok, great, we now have a list of files that have contain both UK and USA.
+
+
+------------------
+
+
+Step 3: Search for three strings
+
+
+Recall Case 3 - three strings:
+
+$ grepz UK USA France
+
+## ./country-info/capitals.txt
+- UK -
+1:London, UK
+- USA -
+2:Washington DC, USA
+- France -
+3:Paris, France
+
+## ./countries.txt
+- UK -
+1:UK
+- USA -
+2:USA
+- France -
+3:France
+
+
+Again, let's aim first for the list of files we need. We could just add another pipe on the end like this:
+
+$ grep -w -R -l UK | while read filename; do grep -w -l USA $filename | while read filename2; do grep -w -l France $filename2; done; done
+
+Making that easier to read:
+
+$ grep -w -R -l UK | while read filename; do
+>   grep -w -l USA $filename | while read filename2; do
+>     grep -w -l France $filename2;
+>   done
+> done
+country-info/capitals.txt
+countries.txt
+
+Recall from above that the output of the second grep (for USA) is a list of filenames containing both UK and USA. We're piping that to another 'while read <variable>' as above. That works fine for three strings, but what about ten? Or arbitrary strings as opposed to hard-coded ones?
+
+
+------------------
+
+
+Step 4: Search for n strings 
+
+
+Again, recall Case 3:
+
+$ grepz UK USA France
+
+## ./country-info/capitals.txt
+- UK -
+1:London, UK
+- USA -
+2:Washington DC, USA
+- France -
+3:Paris, France
+
+## ./countries.txt
+- UK -
+1:UK
+- USA -
+2:USA
+- France -
+3:France
+
+The approach I'll take is to put our strings in an array, grab its first element, search for the files that contain that string, and then search each of the files for each of the remaining strings. Note: I'm sure it's not the fastest way of doing it but it's fast enough enough at least for a few hundred files of code. 
+
+$ strings=("UK" "USA" "France")
+
+Now let's get the files matching the first element.
+
+$ first_string="${strings[0]}"
+$ echo $first_string 
+UK
+
+$ files=$(grep -l -R -w "$first_string")
+
+$ echo "$files"
+./country-info/capitals.txt
+./countries.txt
+
+If we then loop over the rest of the strings, searching for each one in our remaining list of files, we can change $files to reflect the change as we go. 
+
+$ rest_of_strings="${strings[@]:1}"
+$ echo "$rest_of_strings"
+USA France
+
+More on array slicing: https://stackoverflow.com/questions/1335815/how-to-slice-an-array-in-bash 
+
+Now build the loop:
+
+$ for string in "$rest_of_strings"
+> do
+>   echo "$string"
+> done
+USA France
+
+That's not what we wanted. echo should put each string on its own line, but we only have one line, and effectively one value that the loop is returning. Bash is seeing "$rest_of_strings" as one word. We can fix this by echoing it first, which splits it up before 'for' starts using it.
+
+$ for string in `echo "$rest_of_strings"`
+> do
+>   echo "$string"
+> done
+USA
+France
+
+Now make the loop change the value of files.
+
+$ for string in `echo "$rest_of_strings"`
+> do
+>   files=$(echo "$files" | while read filename
+>     do
+>       grep -w -l "$string" $filename
+>     done)
+> done
+
+And a sanity check shows we still have the list of files we want:
+
+$ echo "$files"
+country-info/capitals.txt
+countries.txt
+
+
+------------------
+
+
+Step 5: Show the matches for each file, with line numbers and formatting.
+
+
+We now know that $files is all the files containing all the strings in $strings, so we can make a nested loop to produce our output.
+
+$ for filename in `echo "$files"`
+> do
+>   echo "## ${filename}"
+>   for string in "${strings[@]}"
+>   do
+>     echo "- $string -"
+>     grep -n --colour "$string" "$filename"
+>   done
+>   echo
+> done
+
+## country-info/capitals.txt
+- UK -
+1:London, UK
+- USA -
+2:Washington DC, USA
+- France -
+3:Paris, France
+
+## countries.txt
+- UK -
+1:UK
+- USA -
+2:USA
+- France -
+3:France
+
+We don't need the '-- String --' lines if we only have one string, so let's put all of this in a file, build the array from the command line arguments, and add a flag for when we have multiple search strings.
+
+$ cat grepz
+#!/bin/bash
+
+strings=("$@")
+
+if [ ${#strings[@]} -eq 1 ]; then
+  many_strings=1
+fi
+
+first_string="${strings[0]}"
+files=$(grep -l -R -w "$first_string")
+
+for string in `echo "$rest_of_strings"`
+do
+  files=$(echo "$files" | while read filename
+    do
+      grep -w -l "$string" $filename
+    done)
+done
+
+echo
+
+for filename in `echo "$files"`
+do
+  echo "## ${filename}"
+  for string in "${strings[@]}"
+  do
+    echo "- $string -"
+    grep -n --colour "$string" "$filename"
+  done
+  echo
+done
+
+
+
+------------------
+
+
+# Running grepz
+
+Make it executable and if you like put it somewhere in your $PATH so you can run it.
+
+$ chmod +x grepz 
+$ sudo cp grepz /usr/local/bin
+
+Double check our that we still pass our three test cases:
+
+$ grepz UK
+$ grepz UK USA
+$ grepz UK USA France
+
+
+------------------
+
+Exercises:
+
+1) Change test.sh so grepz runs Cases 1-3 above. Make it show some helpful output, i.e. do they pass? Do they fail?
+
+2) Below are some other test cases grepz should be able to pass at this stage. Edit test.sh to see if it actually does pass them. Then change Case 7 so that it produces a positive match on 'Yor' (currently it doesn't). If you still have time, make an additional test case for finding "Yor", "York" and "New York" (how it should behave is up to you) and make grepz pass it.
+
+Case 4 
+
+$ grepz York
+
+## ./cities.txt 
+2:New York
+4:York
+
+Case 5
+
+$ grepz "New York"
+
+## ./cities.txt 
+2:New York
+
+Case 6
+
+$ grepz York "New York"
+
+## ./cities.txt 
+- York -
+2:New York
+4:York
+- New York -
+2:New York
+
+Case 7
+
+$ grepz Yor
+
+[no results]
+
+Case 8
+
+$ grepz New York
+
+## ./cities.txt 
+- New -
+2:New York
+- York -
+2:New York
+4:York
