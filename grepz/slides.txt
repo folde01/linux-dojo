@@ -2,9 +2,9 @@ Example: building grepz, a handy search tool
 
 This example will show a way to build grepz, a shell script I wrote recently for helping me when writing Terraform code. grepz takes an arbitrary number of arguments as strings, and looks recursively under the current directory for files that contain all those strings.
 
-For each such file it finds, grepz will show an entry containing the filename, followed by all the matching lines with their respective line numbers.
+For each such file it finds, it will show the filename, followed by all the matching lines with their respective line numbers.
 
-Let's try to do it in a semi-test driven development way.  First let's make a few text files to work with.
+Let's try to do this in a semi-test driven development way. First we'll make a few text files to work with.
 
 $ mkdir testfiles
 $ cd testfiles
@@ -26,7 +26,7 @@ York
 Paris
 EOF
 
-This is called a 'heredoc' - https://www.gnu.org/software/bash/manual/html_node/Redirections.html is all about this and other very useful forms of 'redirection' of input and output in bash, like > and >> above. 
+The command above is called a 'heredoc' - https://www.gnu.org/software/bash/manual/html_node/Redirections.html is all about this and other very useful forms of 'redirection' of input and output in bash, like > and >> above. 
  
 $ cat cities.txt 
 London
@@ -34,6 +34,8 @@ New York
 Cardiff
 York
 Paris
+
+To make sure we're looking for files recursively, let's make a sub-folder with a file in it.
 
 $ mkdir country-info
 
@@ -50,7 +52,7 @@ Paris, France
 
 Let's make a few test cases showing how we want grepz to behave:
 
-Case 1 - one string
+Case 1 - search for one string
 
 $ grepz UK
 
@@ -60,7 +62,7 @@ $ grepz UK
 ## ./countries.txt
 1:UK
 
-Case 2 - two strings
+Case 2 - search for two strings
 
 $ grepz UK USA
 
@@ -76,7 +78,7 @@ $ grepz UK USA
 - USA -
 2:USA
 
-Case 3 - three strings
+Case 3 - search for three strings
 
 $ grepz UK USA France
 
@@ -96,51 +98,11 @@ $ grepz UK USA France
 - France -
 3:France
 
-Case 4 
-
-$ grepz York
-
-## ./cities.txt 
-2:New York
-4:York
-
-Case 5
-
-$ grepz "New York"
-
-## ./cities.txt 
-2:New York
-
-Case 6
-
-$ grepz York "New York"
-
-## ./cities.txt 
-- York -
-2:New York
-4:York
-- New York -
-2:New York
-
-Case 7
-
-$ grepz Yor
-
-[no results]
-
-Case 8
-
-$ grepz New York
-
-## ./cities.txt 
-- New -
-2:New York
-- York -
-2:New York
-4:York
 
 
-So how to make it do that? Let's do it in steps.
+So how to make it do all that? Let's take it in steps.
+
+----------------
 
 Step 1: search for one string 
 
@@ -164,6 +126,10 @@ country-info/capitals.txt:1:London, UK
 countries.txt:1:UK
 
 That gives us all the info we need, minus the formatting, but let's worry about that later.
+
+
+----------------
+
 
 Step 2: search for two strings, as in Case 2.
 
@@ -237,7 +203,11 @@ $
 Ok, great, we now have a list of files that have contain both UK and USA.
 
 
+------------------
+
+
 Step 3: Search for three strings
+
 
 Recall what we need: 
 
@@ -279,7 +249,11 @@ countries.txt
 Recall from above that the output of the second grep (for USA) is a list of filenames containing both UK and USA. We're piping that to another 'while read variable' as above. That works fine for three, but what about ten? And arbitrary strings as opposed to hard-coded ones?
 
 
+------------------
+
+
 Step 4: Search for n strings 
+
 
 Again, recall Case 3:
 
@@ -359,32 +333,139 @@ country-info/capitals.txt
 countries.txt
 
 
+------------------
+
+
+Step 5: Show the matches for each file, with line numbers and formatting.
+
+
+We now know that $files is all the files containing all the strings in $strings, so we can make a nested loop to produce our output.
+
+$ for filename in `echo "$files"`
+> do
+>   echo "## ${filename}"
+>   for string in "${strings[@]}"
+>   do
+>     echo "- $string -"
+>     grep -n --colour "$string" "$filename"
+>   done
+>   echo
+> done
+
+## country-info/capitals.txt
+- UK -
+1:London, UK
+- USA -
+2:Washington DC, USA
+- France -
+3:Paris, France
+
+## countries.txt
+- UK -
+1:UK
+- USA -
+2:USA
+- France -
+3:France
+
+We don't need the '-- String --' lines if we only have one string, so let's put all of this in a file, build the array from the command line arguments, and add a flag for when we have multiple search strings.
+
+$ cat grepz
+#!/bin/bash
+
+strings=("$@")
+
+if [ ${#strings[@]} -eq 1 ]; then
+  many_strings=1
+fi
+
+first_string="${strings[0]}"
+files=$(grep -l -R -w "$first_string")
+
+for string in `echo "$rest_of_strings"`
+do
+  files=$(echo "$files" | while read filename
+    do
+      grep -w -l "$string" $filename
+    done)
+done
+
+echo
+
+for filename in `echo "$files"`
+do
+  echo "## ${filename}"
+  for string in "${strings[@]}"
+  do
+    echo "- $string -"
+    grep -n --colour "$string" "$filename"
+  done
+  echo
+done
+
+$
 
 
 
+Make it executable and put it somewhere in your $PATH so you can run it.
+
+$ chmod +x grepz 
+$ sudo cp grepz /usr/local/bin
+
+We can double check our that we still pass our three test cases:
+
+$ grepz UK
+$ grepz UK USA
+$ grepz UK USA France
 
 
+------------------
 
- 
+Exercise:
 
+Below are some other test cases grepz should be able to pass at this stage. Make sure it does, and then change Case 7 so that it produces a match on 'Yor'. If you still have time, make a new test case for "Yor", "York" and "New York" (how it should behave is up to you) and make grepz pass it.
 
+Case 4 
 
+$ grepz York
 
+## ./cities.txt 
+2:New York
+4:York
 
+Case 5
 
+$ grepz "New York"
 
+## ./cities.txt 
+2:New York
 
+Case 6
 
+$ grepz York "New York"
 
+## ./cities.txt 
+- York -
+2:New York
+4:York
+- New York -
+2:New York
 
+Case 7
 
+$ grepz Yor
 
+[no results]
 
+Case 8
 
+$ grepz New York
 
-
-
-
-
+## ./cities.txt 
+- New -
+2:New York
+- York -
+2:New York
+4:York
 
 
