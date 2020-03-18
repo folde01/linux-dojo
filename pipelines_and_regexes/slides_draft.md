@@ -52,7 +52,7 @@ This is made possible by the *"Unix philosophy"*, initially defined by [Ken Thom
 -> **There is more than one way to do it ** TIMTOWTDI (Tim Toady)** <-
 
 
-Originally originated from the Perl community, but it applies well to general Linux scripting in my opinion.
+Originally this was the motto of the Perl community, but it applies well to general Linux scripting in my opinion.
 
 <br>
 
