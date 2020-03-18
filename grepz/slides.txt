@@ -1,10 +1,12 @@
-Example: building grepz, a handy search tool
+Jesse's Linux dojo example: building grepz, a handy search tool
 
 This example will show a way to build grepz, a shell script I wrote recently for helping me when writing Terraform code. grepz takes an arbitrary number of arguments as strings, and looks recursively under the current directory for files that contain all those strings.
 
 For each such file it finds, it will show the filename, followed by all the matching lines with their respective line numbers.
 
-Let's try to do this in a semi-test driven development way. First we'll make a few text files to work with.
+Let's try to do this in a semi-test driven development way. First we'll make a few text files to work with. I'll be working from a folder called grepz in the dojo repo - https://github.com/folde01/linux-dojo - which has this file in it.
+
+$ cd grepz
 
 $ mkdir testfiles
 $ cd testfiles
@@ -49,6 +51,20 @@ $ cat country-info/capitals.txt
 London, UK
 Washington DC, USA
 Paris, France
+
+Here's what we should now have under testfiles:
+
+$ ls -lR
+.:
+total 12
+-rw-r--r-- 1 jesse jesse   35 Mar 18 09:32 cities.txt
+-rw-r--r-- 1 jesse jesse   14 Mar 18 09:32 countries.txt
+drwxr-xr-x 2 jesse jesse 4096 Mar 18 09:32 country-info
+
+./country-info:
+total 4
+-rw-r--r-- 1 jesse jesse 44 Mar 18 09:32 capitals.txt
+
 
 Let's make a few test cases showing how we want grepz to behave:
 
@@ -99,10 +115,122 @@ $ grepz UK USA France
 3:France
 
 
+Now let's put that all in a test.sh file, so we can use it as we go.
 
-So how to make it do all that? Let's take it in steps.
+At the top we'll see if testfiles exists and remove it if it does. But let's put the directory name in a variable in case we ever want to call it something else.
+
+#!/bin/bash
+
+testfiles_dir="testfiles"
+
+if [ -d "$testfiles_dir" ]; then 
+  rm -r "$testfiles_dir"
+  mkdir "$testfiles_dir"
+fi
+
+cd "$testfiles_dir"
+
+You'll note there a lot of quotes. Quoting is a big topic in Bash, so an illustrative example:
+
+$ mkdir foo
+$ cd foo
+$ testfiles_dir="testfiles dir"
+$ mkdir $testfiles_dir
+
+$ ls
+dir  testfiles
+
+Not what we wanted? This time with quotes:
+
+$ rmdir dir testfiles
+
+$ mkdir "$testfiles_dir"
+
+$ ls
+'testfiles dir'
+
+
+Here's what test.sh might look like at this point. Note there are three comments in it. The first is a special comment telling the Linux kernel to run this file using the /bin/bash executable. The second is a normal comment, but the last one is a hack to get around the fact that Bash doesn't support multiline comments. We use a heredoc as above, but this time the input is redirected to no command, so nothing happens, which is what we want.
+
+$ test.sh
+#!/bin/bash
+
+# This is our test script for grepz!
+
+testfiles_dir="testfiles"
+
+if [ -d "$testfiles_dir" ]; then
+  rm -r "$testfiles_dir"
+  mkdir "$testfiles_dir"
+cd "$testfiles_dir"
+
+echo UK > countries.txt
+echo USA >> countries.txt
+echo France >> countries.txt
+
+cat << EOF > cities.txt
+London
+New York
+Cardiff
+York
+Paris
+EOF
+
+mkdir country-info
+
+cat << EOF > country-info/capitals.txt
+London, UK
+Washington DC, USA
+Paris, France
+EOF
+
+<< COMMENT
+$ grepz UK USA
+
+## ./country-info/capitals.txt
+- UK -
+1:London, UK
+- USA -
+2:Washington DC, USA
+
+## ./countries.txt
+- UK -
+1:UK
+- USA -
+2:USA
+
+Case 3 - search for three strings
+
+$ grepz UK USA France
+
+## ./country-info/capitals.txt
+- UK -
+1:London, UK
+- USA -
+2:Washington DC, USA
+- France -
+3:Paris, France
+
+## ./countries.txt
+- UK -
+1:UK
+- USA -
+2:USA
+- France -
+3:France
+COMMENT
+
+
+
 
 ----------------
+
+Now onto writing grepz. How to make it pass all our tests? 
+
+Let's take it in steps.
+
+----------------
+
 
 Step 1: search for one string 
 
@@ -421,9 +549,11 @@ $ grepz UK USA France
 
 ------------------
 
-Exercise:
+Exercises:
 
-Below are some other test cases grepz should be able to pass at this stage. Make sure it does, and then change Case 7 so that it produces a match on 'Yor'. If you still have time, make a new test case for "Yor", "York" and "New York" (how it should behave is up to you) and make grepz pass it.
+1) Change test.sh so grepz runs Cases 1-3 above. Make it show some helpful output.
+
+2) Below are some other test cases grepz should be able to pass at this stage. Edit test.sh to see if it actually does pass them. Then change Case 7 so that it produces a positive match on 'Yor' (currently it doesn't). If you still have time, make an additional test case for finding "Yor", "York" and "New York" (how it should behave is up to you) and make grepz pass it.
 
 Case 4 
 
