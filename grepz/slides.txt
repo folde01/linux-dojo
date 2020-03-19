@@ -583,6 +583,8 @@ fi
 first_string="${strings[0]}"
 files=$(grep -l -R -w "$first_string")
 
+rest_of_strings="${strings[@]:1}"
+
 for string in `echo "$rest_of_strings"`
 do
   files=$(echo "$files" | while read filename
@@ -598,7 +600,8 @@ do
   echo "## ${filename}"
   for string in "${strings[@]}"
   do
-    echo "- $string -"
+    # echo "- $string -"
+    [ -z $many_strings ] && echo "- $string -"
     grep -n --colour "$string" "$filename"
   done
   echo
